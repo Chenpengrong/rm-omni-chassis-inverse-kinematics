@@ -26,7 +26,7 @@
 ## 文件结构
 
 ```
-rm omni chassis inverse kinematics/
+rm-omni-chassis-inverse-kinematics/
 ├── Omni_IK.h          # 头文件：结构体定义、函数声明
 └── Omni_IK.c          # 实现文件：两种模式的逆解算函数
 ```
