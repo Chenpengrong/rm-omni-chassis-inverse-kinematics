@@ -5,8 +5,8 @@
   * @brief          : 全向底盘运动学逆解算模块
   *                   支持随动模式与小陀螺模式两种控制策略
   * @author         : Chen
-  * @date           : 2026/10/7
-  * @version        : v1.0
+  * @date           : 2026/10/23
+  * @version        : v1.1
   ******************************************************************************
   * @attention      vx、vy 遵循右手坐标系，w 以逆时针为正方向
   *                      ^ vx     /_   w
@@ -42,7 +42,6 @@ static const Omni_Chassis_Info_t Omni_Chassis_Info = {
  * @param  vy            底盘坐标系 Y 轴目标速度 (m/s)
  * @param  w             底盘坐标系目标旋转角速度 (rad/s),需要外部进行pid计算
  * @param  output[4]     输出各轮电机目标角速度 (rad/s)，需要根据自己实际电机id排放位置进行修改，
- *                       例如我的output[0] 为前左电机，output[1] 为后左电机，output[2] 为后右电机，output[3] 为前右电机
  *
  * 逆解算公式（四轮全向底盘）：
  *   v_front_left  = -vx + vy + vw * R
@@ -79,26 +78,29 @@ void Omni_Follow_IK(
  * @param  vx            云台坐标系 X 轴目标速度 (m/s)
  * @param  vy            云台坐标系 Y 轴目标速度 (m/s)
  * @param  w             底盘坐标系目标旋转角速度 (rad/s)
- * @param  gimbal_angle  云台当前角度 (rad)，采用6020编码器测量[-PI, PI]
- * @param  fixed_chassis_forward_angle 底盘正方向角度 (rad)，是一个固定值
+ * @param  gimbal_encoder 云台当前编码器值，6020电机编码器值范围[0, 8191]
+ * @param  fixed_chassis_forward_encoder 底盘正方向编码器值，是一个固定值
  * @param  output[4]     输出各轮电机目标角速度 (rad/s)，需要根据自己实际电机id排放位置进行修改，
- *                       例如我的output[0] 为前左电机，output[1] 为后左电机，output[2] 为后右电机，output[3] 为前右电机
  *
  * 处理流程：
- *   1. 计算云台与底盘正方向的角度差 relative_angle = gimbal_angle - fixed_chassis_forward_angle
- *   2. 通过二维旋转矩阵将 (vx, vy) 变换到底盘坐标系 (vx_chassis, vy_chassis)
- *   3. 在底盘坐标系下执行四轮全向运动学逆解算
+ *   1. 计算云台与底盘正方向的编码器值差 relative_encoder = gimbal_encoder - fixed_chassis_forward_encoder
+ *   2. 将编码器值转换为角度 relative_angle = relative_encoder * (2.0f * 3.1415926f / 8191.0f)
+ *   3. 通过二维旋转矩阵将 (vx, vy) 变换到底盘坐标系 (vx_chassis, vy_chassis)
+ *   4. 在底盘坐标系下执行四轮全向运动学逆解算
  */
 void Omni_Spin_IK(
     float vx,
     float vy,
     float w,
-    float gimbal_angle,
-    float fixed_chassis_forward_angle,
+    int16_t gimbal_encoder,
+    int16_t fixed_chassis_forward_encoder,
     float output[4])
 {
-    /* ---------- 计算云台与底盘的角度差 ---------- */
-    float relative_angle = gimbal_angle - fixed_chassis_forward_angle;
+    /* ---------- 计算云台与底盘的编码器值差 ---------- */
+    int16_t relative_encoder = gimbal_encoder - fixed_chassis_forward_encoder;
+
+    /* ---------- 编码器值转换为角度(rad) ---------- */
+    float relative_angle = relative_encoder * (2.0f * 3.1415926f / 8191.0f);
 
     /* ---------- 向量旋转变换：云台坐标系 → 底盘坐标系 ---------- */
     float vx_chassis = vx * cosf(relative_angle) - vy * sinf(relative_angle);
