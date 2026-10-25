@@ -108,19 +108,21 @@ v_rear_right  =  vx - vy + w * R
 
 ```c
 void Omni_Spin_IK(
-    float vx,                           // 云台坐标系 X 轴目标速度 (m/s)
-    float vy,                           // 云台坐标系 Y 轴目标速度 (m/s)
-    float w,                            // 底盘坐标系目标旋转角速度 (rad/s)
-    float gimbal_angle,                 // 云台当前角度 (rad)，范围 [-PI, PI]
-    float fixed_chassis_forward_angle,  // 底盘正方向角度 (rad)，固定值
-    float output[4]                     // 输出各轮电机目标角速度 (rad/s)
+    float vx,                               // 云台坐标系 X 轴目标速度 (m/s)
+    float vy,                               // 云台坐标系 Y 轴目标速度 (m/s)
+    float w,                                // 底盘坐标系目标旋转角速度 (rad/s)
+    int16_t gimbal_encoder,                 // 云台当前编码器值，范围 [0，8191]
+    int16_t fixed_chassis_forward_encoder,  // 底盘正方向编码器值，固定值
+    float output[4]                         // 输出各轮电机目标角速度 (rad/s)
 );
 ```
 
 **处理流程：**
 
-1. 计算云台与底盘正方向的角度差：`relative_angle = gimbal_angle - fixed_chassis_forward_angle`
-2. 通过二维旋转矩阵将 `(vx, vy)` 从云台坐标系变换到底盘坐标系：
+1. 计算云台与底盘正方向的编码器值差 relative_encoder = gimbal_encoder - fixed_chassis_forward_encoder
+2. 将编码器值转换为角度 relative_angle = relative_encoder * (2.0f * 3.1415926f / 8191.0f)
+3. 通过二维旋转矩阵将 (vx, vy) 变换到底盘坐标系 (vx_chassis, vy_chassis)
+4. 在底盘坐标系下执行四轮全向运动学逆解算
 
 ![旋转矩阵](旋转矩阵.png)
 
@@ -131,7 +133,7 @@ vy_chassis(即图中y') = vx(即图中x) * sin(β) + vy(即图中y) * cos(β)
 
 3. 在底盘坐标系下执行四轮全向运动学逆解算（与随动模式相同）
 
-**说明：** `gimbal_angle` 是 yaw 轴电机的编码器当前值或者根据其换算出来的角度，是一个变量。而 `fixed_chassis_forward_angle` 是底盘正方向所对应的 yaw 轴编码器的一个值或者换算的一个角度，是一个固定值，这就需要根据你的实际安装情况来选取了。如果旋转矩阵不理解也没有关系，只要知道并且会用就可以。
+**说明：** `gimbal_encoder` 是 yaw 轴电机的编码器当前值，是一个变量。而 `fixed_chassis_forward_encoder` 是底盘正方向所对应的 yaw 轴编码器的一个值，是一个固定值。这就需要根据你的实际安装情况来选取了，如果旋转矩阵不理解也没有关系，只要知道并且会用就可以。
 
 ---
 
@@ -152,4 +154,4 @@ vy_chassis(即图中y') = vx(即图中x) * sin(β) + vy(即图中y) * cos(β)
 
 ## 最后
 
-如果这份代码对您有帮助，麻烦动动您发财的手指，给我点一个免费的star，感谢您的帮助与支持！
+如果这份代码对您有帮助，能不能给我点一个免费的star，感谢您的帮助与支持！
