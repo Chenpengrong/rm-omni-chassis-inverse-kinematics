@@ -4,8 +4,8 @@
   * @file           : Omni_IK.h
   * @brief          : 全向底盘运动学
   * @author         : Chen
-  * @date           : 2026/10/7
-  * @version        : v1.0
+  * @date           : 2026/10/23
+  * @version        : v1.1
   ******************************************************************************
   */
 /* USER CODE END Header */
@@ -36,8 +36,8 @@ extern void Omni_Spin_IK(
     float vx,
     float vy,
     float w,
-    float gimbal_angle,
-    float fixed_chassis_forward_angle,
+    int16_t gimbal_encoder,
+    int16_t fixed_chassis_forward_encoder,
     float output[4]);
 
 #endif /* OMNI_IK_H */
