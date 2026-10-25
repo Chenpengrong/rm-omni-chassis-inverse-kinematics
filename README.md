@@ -122,7 +122,7 @@ void Omni_Spin_IK(
 1. 计算云台与底盘正方向的编码器值差 relative_encoder = gimbal_encoder - fixed_chassis_forward_encoder
 2. 将编码器值转换为角度 relative_angle = relative_encoder * (2.0f * 3.1415926f / 8191.0f)
 3. 通过二维旋转矩阵将 (vx, vy) 变换到底盘坐标系 (vx_chassis, vy_chassis)
-4. 在底盘坐标系下执行四轮全向运动学逆解算
+
 ![旋转矩阵](旋转矩阵.png)
 
 ```
